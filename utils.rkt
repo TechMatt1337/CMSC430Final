@@ -403,11 +403,21 @@
                  [%>=
                   (lambda (a b) 
                     (prim not (prim < a b)))]
-                 [%append (let ([%append '()])
-                            (let ([_0 (set! %append (lambda (ls0 ls1)
-                                                      (if (prim null? ls0)
-                                                          ls1
-                                                          (prim cons (prim car ls0) (%append (prim cdr ls0) ls1)))))])
+                 [%append (let ([%append '()]
+                                [%append2 '()])
+                            (let ([_0 (set! %append2
+                                            (lambda (ls0 ls1)
+                                              (if (prim null? ls0)
+                                                  ls1
+                                                  (prim cons (prim car ls0) (%append2 (prim cdr ls0) ls1)))))]
+                                  [_1 (set! %append
+                                            (lambda xs
+                                              (if (prim null? xs)
+                                                  '()
+                                                  (let ([hd (prim car xs)]
+                                                        [tl (prim cdr xs)])
+                                                    (let ([result1 (apply %append tl)])
+                                                      (%append2 hd result1))))))])
                               %append))]
                  [%list?
                   (lambda (a)

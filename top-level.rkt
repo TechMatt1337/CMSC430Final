@@ -108,18 +108,21 @@
       [`(let ,loop ([,xs ,rhss] ...) ,es ...)
        `(let ,loop ,(map list xs (map T rhss)) ,(T `(begin . ,es)))]
       [`(cond [,guards ,ess ...] ...)
-       `(cond ,@(map (lambda (guard es) `[,(T guard) ,(T `(begin . ,es))]) guards ess))]
+       `(cond ,@(map (lambda (guard es) (if (null? es) `(,(T guard)) `[,(T guard) ,(T `(begin . ,es))])) guards ess))]
       [`(case ,key [,guards ,ess ...] ...)
        `(case ,(T key) ,@(map (lambda (guard es) `[,guard ,(T `(begin . ,es))]) guards ess))]
+      [`(guard (,x [,guards ,ess ...] ...) ,bodies ...)
+       `(guard (,x ,@(map (lambda (guard es) (if (null? es) `(,(T guard)) `(,(T guard) ,(T `(begin . ,es))))) guards ess))
+               ,(T `(begin . ,bodies)))]
       [`(lambda ,param ,es ...)
        (match param
-         [(? symbol? x)
-          `(lambda ,x ,(T `(begin . ,es)))]
-         [`(,(? symbol? xs) ... . ,(? symbol? args))
-          `(lambda (,@xs . ,args) ,(T `(begin . ,es)))]
-         [`(,(? symbol? xs) ... ,(list def-xs def-es) ...)
-          (T-lambda-with-default-params xs def-xs def-es (T `(begin . ,es)))]
-         [else (error "unexpected arg list")])]
+              [(? symbol? x)
+               `(lambda ,x ,(T `(begin . ,es)))]
+              [`(,(? symbol? xs) ... . ,(? symbol? args))
+               `(lambda (,@xs . ,args) ,(T `(begin . ,es)))]
+              [`(,(? symbol? xs) ... ,(list def-xs def-es) ...)
+               (T-lambda-with-default-params xs def-xs def-es (T `(begin . ,es)))]
+              [else (error "unexpected arg list")])]
       [`(match ,(? symbol? k))
        `(raise '"Match failed")]
       [`(match ,(? symbol? k) [,pat ,es ...] . ,rest)
@@ -129,8 +132,8 @@
       [`(match ,key . ,rest)
        (define k (gensym 'match-key))
        `(let ([,k ,(T key)]) ,(T `(match ,k . ,rest)))]
-      ; Handle various forms with implicit begins at once
-      [`(,(and tag (or 'letrec 'letrec* 'let 'let* 'guard 'when 'unless)) ,stuff ,es ...)
+                                        ; Handle various forms with implicit begins at once
+      [`(,(and tag (or 'letrec 'letrec* 'let 'let* 'when 'unless)) ,stuff ,es ...)
        `(,tag ,(T stuff) ,(T `(begin . ,es)))]
       [``,quasi (T-qq quasi)]
       [`',d `',d]
