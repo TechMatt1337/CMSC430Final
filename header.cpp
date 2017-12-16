@@ -231,6 +231,21 @@ u64 prim_substring_3(u64 strv, u64 start, u64 end)
     return ENCODE_STR(sub);
 }
 
+u64 prim_string_45append(u64 strv1, u64 strv2)
+{
+    ASSERT_TAG(strv1, STR_TAG, "first argument to string-append must be a string");
+    ASSERT_TAG(strv2, STR_TAG, "second argument to string-append must be a string");
+
+    char *str1 = DECODE_STR(strv1);
+    char *str2 = DECODE_STR(strv2);
+    char *sub = (char *) malloc((strlen(str1)+strlen(str2)+1));
+
+    strcpy(sub, str1);
+    strcat(sub, str2);
+
+    return ENCODE_STR(sub);
+}
+
 /////// CONSTANTS
     
     
