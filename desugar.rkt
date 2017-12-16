@@ -376,6 +376,29 @@
             (t-desugar `(%%prim ,op . ,es) env)
             (t-desugar `(%%prim halt ',(string-append "ERROR: number?  expected 1  given "
                                                       (number->string (length es)))) env))]
+       ['/
+        (if (< (length es) 1)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: /  expected at least 1  given "
+                                                      (number->string (length es)))) env)
+            (t-desugar `(%%prim ,op ,(car es) . ,(map (lambda (v)
+                                                    `(if (%%prim = ,v '0)
+                                                         (%%prim halt '"ERROR: divided by zero!")
+                                                         ,v)) (cdr es))) env))]
+       ['string->list
+        (if (= (length es) 1)
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: string->list  expected 1  given "
+                                                      (number->string (length es)))) env))]
+       ['string-ref
+        (if (= (length es) 2)
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: string-ref  expected 2  given "
+                                                      (number->string (length es)))) env))]
+       ['substring
+        (if (or (= (length es) 2) (= (length es) 3))
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: substring  expected 2 to 3  given "
+                                                      (number->string (length es)))) env))]
        [else
         (t-desugar `(%%prim ,op . ,es) env)]
        )

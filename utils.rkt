@@ -288,6 +288,12 @@
             (T e0)]
            [`(prim + ,e0 ,e1 ,e2 ,es ...)
             (T `(prim + ,e0 (prim + ,e1 ,e2 ,@es)))]
+           [`(prim string-append)
+            ''""]
+           [`(prim string-append ,e0)
+            (T `(prim string-append ,e0 '""))]
+           [`(prim string-append ,e0 ,e1 ,e2 ,es ...)
+            (T `(prim string-append ,e0 (prim string-append ,e1 ,e2 ,@es)))]
            [`(prim *)
             ''1]
            [`(prim * ,e0)
