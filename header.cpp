@@ -344,6 +344,10 @@ u64 prim_print_aux(u64 v)
 {
     if (v == V_NULL)
         printf("()");
+    else if (v == V_TRUE) 
+        printf("#t");
+    else if (v == V_FALSE) 
+        printf("#f");
     else if ((v&7) == CLO_TAG)
         printf("#<procedure>");
     else if ((v&7) == CONS_TAG)
@@ -395,6 +399,10 @@ u64 prim_print(u64 v)
 {
     if (v == V_NULL)
         printf("'()");
+    else if (v == V_TRUE) 
+        printf("#t");
+    else if (v == V_FALSE) 
+        printf("#f");
     else if ((v&7) == CLO_TAG)
         printf("#<procedure>");
     else if ((v&7) == CONS_TAG)

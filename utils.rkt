@@ -672,7 +672,9 @@
         #f)))
 
 
-
+(define (split-error-message str)
+  (map (lambda (s) (string-replace s "~" " "))
+       (string-split (string-replace (string-replace str " " "~") ":" " "))))
 
 (define (racket-compile-eval e)
   (define (rewrite-match e)
@@ -682,7 +684,20 @@
               (rewrite-match `(match ,e0 ,@clauses (,pat0 ,@es) (else (raise "no match"))))]
              [`(,e0 . ,es) (cons (rewrite-match e0) (rewrite-match es))]
              [else e]))
-  (with-handlers ([exn:fail? (lambda (x) (pretty-print "Evaluation failed:") (pretty-print x) (pretty-print e) (error 'eval-fail))])
+  (with-handlers ([exn:fail:contract:arity? (lambda (x)
+                                              (define error-message
+                                                (vector-ref (struct->vector x) 1))
+                                              (define split-error
+                                                (split-error-message error-message))
+                                              (string-append
+                                               "ERROR: "
+                                               (car split-error)
+                                               (fourth split-error)
+                                               (fifth split-error)
+                                               (sixth split-error)
+                                               (seventh split-error)))]
+                  [exn:fail:contract:divide-by-zero? (lambda (_) "ERROR: divided by zero!")]
+                  [exn:fail? (lambda (x) (pretty-print "Evaluation failed:") (pretty-print x) (pretty-print e) (error 'eval-fail))])
                  (parameterize ([current-namespace (make-base-namespace)])
                                (namespace-require 'rnrs)
                                (namespace-require 'racket)

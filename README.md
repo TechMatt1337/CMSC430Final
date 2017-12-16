@@ -45,16 +45,10 @@ These prims are utilized by the five provided tests. These were determined by de
   * This prim will take in a single pair and return the first element in the pair. 
 * `(cdr pair)`
   * This prim will take in a single pair and return the pair, but with the first element removed. 
-* `(cons? val)`
-  * This prim will take in any value and return #t if the value is a pair, or #f if not.
 * `(cons val1 val2)`
   * This prim will return a pair consisting of `var1` and `var2`, in that order.
-* `(drop list num)`
-  * This prim will take in a list and a non-negative integer. It will return a list consisting of all of the elements in `list` at and after the specified index (which is zero indexed).
 * `(eq? var1 var2)`
   * This prim will return #t if `var1` is physically equal to `var2`, and #f if not.
-* `(length list)`
-  * This prim will return the number of elements in the list `list`.
 * `(not var)`
   * This prim will return #t if `var` is #f, and will return #f if `var` is not #f.
 * `(null? var)`

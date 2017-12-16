@@ -295,15 +295,91 @@
 ; or matches a symbol?, prim-op, or normal application
 (define (t-desugar e env)  ; (pretty-print `(t-desugar ,e ,env))
   (match e
-         ; match a transformer in env
-         [`(,(? (lambda (x) (procedure? (hash-ref env x #f))) x) . ,rest)
-          ((hash-ref env x) e env)]
-
-         ; primitive (optimized case)
-         [`(,(? prim? op) ,es ...)
-          #:when (eq? #t (hash-ref env op #f))
-          (t-desugar `(%%prim ,op . ,es)
-                     env)]
+    ; match a transformer in env
+    [`(,(? (lambda (x) (procedure? (hash-ref env x #f))) x) . ,rest)
+     ((hash-ref env x) e env)]
+    
+    ; primitive (optimized case)
+    [`(,(? prim? op) ,es ...)
+     #:when (eq? #t (hash-ref env op #f))
+     (match op
+       ['<=
+        (if (< (length es) 2)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: <=  expected at least 2  given "
+                                                      (number->string (length es)))) env)
+            (t-desugar `(%%prim ,op . ,es) env))]
+       ['=
+        (if (< (length es) 2)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: =  expected at least 2  given "
+                                                      (number->string (length es)))) env)
+            (t-desugar `(%%prim ,op . ,es) env))]
+       ['>
+        (if (< (length es) 2)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: >  expected at least 2  given "
+                                                      (number->string (length es)))) env)
+            (t-desugar `(%%prim ,op . ,es) env))]
+       ['-
+        (if (< (length es) 1)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: -  expected at least 1  given "
+                                                      (number->string (length es)))) env)
+            (t-desugar `(%%prim ,op . ,es) env))]
+       ['*
+        (if (= (length es) 0)
+            (t-desugar `(%%prim ,op '1 '1) env)
+            (if (= (length es) 1)
+                (t-desugar `(%%prim ,op '1 . ,es) env)
+                (t-desugar `(%%prim ,op . ,es) env)))]
+       ['+
+        (if (= (length es) 0)
+            (t-desugar `(%%prim ,op '0 '0) env)
+            (if (= (length es) 1)
+                (t-desugar `(%%prim ,op '0 . ,es) env)
+                (t-desugar `(%%prim ,op . ,es) env)))]
+       ['append
+        (if (= (length es) 0)
+            (t-desugar `(%%prim ,op '() '()) env)
+            (if (= (length es) 1)
+                (t-desugar `(%%prim ,op ,@es '()) env)
+                (t-desugar `(%%prim ,op . ,es) env)))]
+       ['car
+        (if (= (length es) 1)
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: car  expected 1  given "
+                                                      (number->string (length es)))) env))]
+       ['cdr
+        (if (= (length es) 1)
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: cdr  expected 1  given "
+                                                      (number->string (length es)))) env))]
+       ['cons
+        (if (= (length es) 2)
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: cons  expected 2  given "
+                                                      (number->string (length es)))) env))]
+       ['eq?
+        (if (= (length es) 2)
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: eq?  expected 2  given "
+                                                      (number->string (length es)))) env))]
+       ['not
+        (if (= (length es) 1)
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: not  expected 1  given "
+                                                      (number->string (length es)))) env))]
+       ['null?
+        (if (= (length es) 1)
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: null?  expected 1  given "
+                                                      (number->string (length es)))) env))]
+       ['number?
+        (if (= (length es) 1)
+            (t-desugar `(%%prim ,op . ,es) env)
+            (t-desugar `(%%prim halt ',(string-append "ERROR: number?  expected 1  given "
+                                                      (number->string (length es)))) env))]
+       [else
+        (t-desugar `(%%prim ,op . ,es) env)]
+       )
+     ]
 
          ; optional renaming by the env
          [(? symbol? x)
