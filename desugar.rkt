@@ -302,6 +302,7 @@
          ; primitive (optimized case)
          [`(,(? prim? op) ,es ...)
           #:when (eq? #t (hash-ref env op #f))
+          (pretty-print (string-append "Prim: " (symbol->string op)))
           (t-desugar `(%%prim ,op . ,es)
                      env)]
 

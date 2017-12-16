@@ -8,17 +8,24 @@
 (require "top-level.rkt")
 (require "closure-convert.rkt")
 
+(define (top->llvm exp)
+  (proc->llvm (closure-convert
+               (cps-convert (anf-convert
+                            (alphatize (assignment-convert
+                                        (simplify-ir (desugar (top-level exp))))))))))
+
+(define (test-top->llvm exp)
+  (define top (eval-top-level exp))
+  (define llvm (eval-llvm (top->llvm exp)))
+  (if (equal? top llvm)
+      #t
+      (begin (display (format "Test-closure-convert: two different values (~a and ~a) before and after closure conversion.\n"
+                             top llvm))
+             #f)))
 
 (define ((make-test path) exp ext)
         (lambda ()
-          (define top (top-level exp))
-          (define t0 (test-top-level top-level exp))
-          (define cps (cps-convert (anf-convert (alphatize (assignment-convert (simplify-ir (desugar top)))))))
-          (define t1 (test-closure-convert closure-convert cps))
-          (define pr (closure-convert cps))
-          (if (and (proc-exp? pr) t0 t1)
-              (test-proc->llvm proc->llvm pr)
-              #f)))
+          (test-top->llvm exp)))
 
 (define (tests-list dir)
   (map
