@@ -246,6 +246,21 @@ u64 prim_string_45append(u64 strv1, u64 strv2)
     return ENCODE_STR(sub);
 }
 
+u64 applyprim_string_45append(u64 p)
+{
+    if (p == V_NULL) {
+        char *nul = (char *) malloc(1);
+        nul[0] = 0;
+        return ENCODE_STR(nul);
+    }
+    else
+    {
+        ASSERT_TAG(p, CONS_TAG, "Tried to apply string-append on non list value.")
+        u64* pp = DECODE_CONS(p);
+        return prim_string_45append(pp[0], applyprim_string_45append(pp[1]));
+    }
+}
+
 /////// CONSTANTS
     
     
