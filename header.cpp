@@ -188,6 +188,7 @@ u64 prim_string_45_62list(u64 strv)
 
     return ENCODE_CONS(lst);
 }
+GEN_EXPECT1ARGLIST(applyprim_string_45_62list, prim_string_45_62list);
 
 u64 prim_string_45ref(u64 strv, u64 index) 
 {
@@ -199,6 +200,7 @@ u64 prim_string_45ref(u64 strv, u64 index)
 
     return ENCODE_CHAR((s64) str[(int) i]);
 }
+GEN_EXPECT2ARGLIST(applyprim_string_45ref, prim_string_45ref);
 
 u64 prim_substring_2(u64 strv, u64 start)
 {
@@ -229,6 +231,19 @@ u64 prim_substring_3(u64 strv, u64 start, u64 end)
         sub[i-DECODE_INT(start)] = str[i];
 
     return ENCODE_STR(sub);
+}
+
+u64 applyprim_substring(u64 p)
+{
+    u64 rest; 
+    u64 v0 = expect_cons(p, &rest); 
+    u64 v1 = expect_cons(rest, &rest); 
+    if (rest == V_NULL) 
+        return prim_substring_2(v0, v1);
+    u64 v2 = expect_cons(rest, &rest);
+    if (rest != V_NULL)
+        fatal_err("prim substring applied on more than 3 arguments."); 
+    return prim_substring_3(v0,v1,v2);                                           
 }
 
 u64 prim_string_45append(u64 strv1, u64 strv2)
