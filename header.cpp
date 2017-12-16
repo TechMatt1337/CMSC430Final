@@ -192,12 +192,43 @@ u64 prim_string_45_62list(u64 strv)
 u64 prim_string_45ref(u64 strv, u64 index) 
 {
     ASSERT_TAG(strv, STR_TAG, "first argument to string-ref must be a string");
-    ASSERT_TAG(strv, STR_TAG, "second argument to string-ref must be an integer");
+    ASSERT_TAG(strv, INT_TAG, "second argument to string-ref must be an integer");
 
     char *str = DECODE_STR(strv);
     s32 i = DECODE_INT(index);
 
     return ENCODE_CHAR((s64) str[(int) i]);
+}
+
+u64 prim_substring_2(u64 strv, u64 start)
+{
+    ASSERT_TAG(strv, STR_TAG, "first argument to substring2 must be a string");
+    ASSERT_TAG(start, INT_TAG, "second argument to substring2 must be an integer");
+
+    char *str = DECODE_STR(strv);
+    char *sub = (char *) malloc((strlen(str)+1));
+    int i = 0;
+
+    for (i = DECODE_INT(start); i <= strlen(str); i++)
+        sub[i-DECODE_INT(start)] = str[i];
+
+    return ENCODE_STR(sub);
+}
+
+u64 prim_substring_3(u64 strv, u64 start, u64 end)
+{
+    ASSERT_TAG(strv, STR_TAG, "first argument to substring2 must be a string");
+    ASSERT_TAG(start, INT_TAG, "second argument to substring2 must be an integer");
+    ASSERT_TAG(end, INT_TAG, "third argument to substring3 must be an integer");
+
+    char *str = DECODE_STR(strv);
+    char *sub = (char *) malloc((strlen(str)+1));
+    int i = 0;
+
+    for (i = DECODE_INT(start); i < DECODE_INT(end); i++)
+        sub[i-DECODE_INT(start)] = str[i];
+
+    return ENCODE_STR(sub);
 }
 
 /////// CONSTANTS

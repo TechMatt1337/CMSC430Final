@@ -539,10 +539,22 @@
                   ,(comment-line
                     "  %" (s-> x) " = call i64 @const_init_string(i8* getelementptr inbounds (" lenstr ", " lenstr "* @" (s-> dx) ", i32 0, i32 0))"
                     "quoted string")
-                  
-                  ,(e->llvm e0)
-                  ))
-               ]
+                  ,(e->llvm e0)))]
+              ['substring
+               (if (eq? 2 (length ys))
+                   (string-append
+                    (comment-line
+                     "  %" (s-> x) " = call i64 @prim_substring_2(i64 %" (s-> (car ys)) ", i64 %" (s-> (car (cdr ys))) ")"
+                     "substring with no end")
+                    (e->llvm e0))
+                   (if (eq? 3 (length ys))
+                       (string-append
+                        (comment-line
+                         "  %" (s-> x) " = call i64 @prim_substring_3(i64 %" (s-> (car ys))
+                         ", i64 %" (s-> (car (cdr ys))) ", i64 %" (s-> (car (cdr (cdr ys)))) ")"
+                         "substring with no end")
+                    (e->llvm e0))
+                       '()))]
               
               [else
                (string-append
