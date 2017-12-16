@@ -421,6 +421,12 @@
               "  %" (s-> x) " = call i64 @const_init_int(i64 " (number->string dat) ")"
               "quoted int")
              (e->llvm e0))]
+           [`(let ([,x ',(? char? dat)]) ,e0)
+            (string-append
+             (comment-line
+              "  %" (s-> x) " = call i64 @const_init_char(i64 " (number->string (char->integer dat)) ")"
+              "quoted char")
+             (e->llvm e0))]
            [`(let ([,x ',(? string? dat)]) ,e0)
             (define dx (gensym 'str))
             (define lenstr (string-append "[" (number->string (+ 1 (string-length dat))) " x i8]"))
@@ -499,17 +505,57 @@
                        (string-append "load; *" (s-> iptr)))
                      ,(e->llvm e0)))]
            [`(let ([,x (prim ,op ,ys ...)]) ,e0)
-            (string-append
-             (comment-line
-              "  %" (s-> x) " = call i64 @" (prim-name op) "("
-              (if (null? ys)
-                  ""
-                  (string-append
-                   "i64 %" (s-> (car ys))
-                   (foldl (lambda (y acc) (string-append acc ", i64 %" (s-> y))) "" (cdr ys))))
-              ")"
-              (string-append "call " (prim-name op)))
-             (e->llvm e0))]
+            (define strptr (gensym 'strptr))
+            (define (set-chars lst index)
+              (define ch (gensym 'ch))
+              (define chptr (gensym 'chptr))
+                (if (empty? lst)
+                    '()
+                    (cons (apply string-append
+                                 `(,(comment-line "  %" (s-> ch)
+                                               " = call i8 @get_char(i64 %" (symbol->string (car lst)) ")"
+                                               "get the char value")
+                                   ,(comment-line "  %" (s-> chptr)
+                                                  " = getelementptr i8, i8* %"
+                                                  (s-> strptr) ", i64 " (number->string index)
+                                                  "get pointer to current char")
+                                   ,(comment-line "  store i8 %" (s-> ch) ", i8* %"
+                                                  (s-> chptr) ", align 8"
+                                                  "set current char equal to passed in")))
+                          (set-chars (cdr lst) (add1 index)))))
+            (match op
+              ['string
+               (define dx (gensym 'str))
+               (define lenstr (string-append "[" (number->string (+ 1 (length ys))) " x i8]"))
+               (set! globals
+                     (string-append globals
+                                    "@" (s-> dx) " = private unnamed_addr global "
+                                    lenstr " c\"" (foldr (lambda (v l) (string-append "\\00" l)) "" ys) "\\00\", align 8\n"))
+               (apply string-append
+                `(,(comment-line
+                    "  %" (s-> strptr) " = bitcast [" (number->string (add1 (length ys))) " x i8]* @" (s-> dx) " to i8*"
+                    "get a pointer to the string")
+                  ,@(set-chars ys 0)
+                  ,(comment-line
+                    "  %" (s-> x) " = call i64 @const_init_string(i8* getelementptr inbounds (" lenstr ", " lenstr "* @" (s-> dx) ", i32 0, i32 0))"
+                    "quoted string")
+                  
+                  ,(e->llvm e0)
+                  ))
+               ]
+              
+              [else
+               (string-append
+                (comment-line
+                 "  %" (s-> x) " = call i64 @" (prim-name op) "("
+                 (if (null? ys)
+                     ""
+                     (string-append
+                      "i64 %" (s-> (car ys))
+                      (foldl (lambda (y acc) (string-append acc ", i64 %" (s-> y))) "" (cdr ys))))
+                 ")"
+                 (string-append "call " (prim-name op)))
+                (e->llvm e0))])]
            [`(let ([,x (apply-prim ,op ,y)]) ,e0)
             (string-append
              (comment-line

@@ -65,7 +65,18 @@ These prims are utilized by the five provided tests. These were determined by de
 
 ## Additional Prims
 
+These prims have been implemented to successfully include strings into this assignment. 
 
+* `(string char...)`
+  * This prim will take zero or more 
+* `(string->list )`
+  * 
+* `(string-ref )`
+  * 
+* `(substring )`
+  * 
+* `(string-append )`
+  * 
 
 
 

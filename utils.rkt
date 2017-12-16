@@ -50,6 +50,7 @@
                      hash hash-ref hash-set hash-count hash-keys hash-has-key? hash?
                      list? void? promise? procedure? number? integer?
                      error void print display write exit halt
+                     string string->list string-ref substring string-append
                      eq? eqv? equal? not))
 (define ok-set (list->set (string->list "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$")))
 (define (c-name s)
@@ -84,6 +85,7 @@
          [`(,(? datum?) ...) #t]
          [(cons datum? datum?) #t]
          [(? string?) #t]
+         [(? char?) #t]
          [(? integer?) #t]
          [(? symbol?) #t]
          [(? boolean?) #t]

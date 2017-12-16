@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "stdint.h"
+#include "string.h"
 
 #define CLO_TAG 0
 #define CONS_TAG 1
@@ -11,7 +12,7 @@
 #define STR_TAG 3
 #define SYM_TAG 4
 #define OTHER_TAG 6
-#define ENUM_TAG 7
+#define CHAR_TAG 7
 
 
 #define VECTOR_OTHERTAG 1
@@ -45,6 +46,9 @@
 
 #define DECODE_INT(v) ((s32)((u32)(((v)&(7ULL^MASK64)) >> 32)))
 #define ENCODE_INT(v) ((((u64)((u32)(v))) << 32) | INT_TAG)
+
+#define DECODE_CHAR(v) ((s32)((u8)(((v)&(7ULL^MASK64)) >> 32)))
+#define ENCODE_CHAR(v) ((((u64)((u8)(v))) << 32) | CHAR_TAG)
 
 #define DECODE_STR(v) ((char*)((v)&(7ULL^MASK64)))
 #define ENCODE_STR(v) (((u64)(v)) | STR_TAG)
@@ -101,7 +105,7 @@ typedef uint64_t u64;
 typedef int64_t s64;
 typedef uint32_t u32;
 typedef int32_t s32;
-
+typedef uint8_t u8;
 
     
 // UTILS
@@ -164,6 +168,37 @@ u64 expect_other(u64 v, u64* rest)
     return p[0];
 }
 
+u8 get_char(s64 i)
+{
+  return (u8)DECODE_CHAR(i);
+}
+
+/////// STRING FUNCTIONS
+
+u64 prim_string_45_62list(u64 strv)
+{
+    ASSERT_TAG(strv, STR_TAG, "first argument to string->list must be a string");
+
+    char *str = DECODE_STR(strv);
+    u64 *lst = (u64 *) malloc((strlen(str)+1)*sizeof(u64));
+    int i = 0;
+
+    for (i = 0; i < strlen(str); i++)
+        lst[i] = ENCODE_CHAR((s64)str[i]);
+
+    return ENCODE_CONS(lst);
+}
+
+u64 prim_string_45ref(u64 strv, u64 index) 
+{
+    ASSERT_TAG(strv, STR_TAG, "first argument to string-ref must be a string");
+    ASSERT_TAG(strv, STR_TAG, "second argument to string-ref must be an integer");
+
+    char *str = DECODE_STR(strv);
+    s32 i = DECODE_INT(index);
+
+    return ENCODE_CHAR((s64) str[(int) i]);
+}
 
 /////// CONSTANTS
     
@@ -171,6 +206,11 @@ u64 expect_other(u64 v, u64* rest)
 u64 const_init_int(s64 i)
 {
     return ENCODE_INT((s32)i);
+}
+
+u64 const_init_char(s64 i)
+{
+    return ENCODE_CHAR((s32)i);
 }
 
 u64 const_init_void()
@@ -260,6 +300,10 @@ u64 prim_print_aux(u64 v)
         }
         printf(")");
     }
+    else if ((v&7) == CHAR_TAG) 
+    {
+        printf("#\\%c", (char) DECODE_CHAR(v));
+    }
     else
         printf("(print.. v); unrecognized value %lu", v);
     //...
@@ -307,6 +351,11 @@ u64 prim_print(u64 v)
         }
         printf(")");
     }
+    else if ((v&7) == CHAR_TAG)     
+    {
+        printf("#\\%c", (char) DECODE_CHAR(v));
+    }
+
     else
         printf("(print v); unrecognized value %lu", v);
     //...
