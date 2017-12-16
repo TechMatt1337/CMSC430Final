@@ -198,7 +198,7 @@ GEN_EXPECT1ARGLIST(applyprim_string_45_62list, prim_string_45_62list);
 u64 prim_string_45ref(u64 strv, u64 index) 
 {
     ASSERT_TAG(strv, STR_TAG, "first argument to string-ref must be a string");
-    ASSERT_TAG(strv, INT_TAG, "second argument to string-ref must be an integer");
+    ASSERT_TAG(index, INT_TAG, "second argument to string-ref must be an integer");
 
     char *str = DECODE_STR(strv);
     s32 i = DECODE_INT(index);

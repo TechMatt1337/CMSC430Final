@@ -34,11 +34,11 @@ These prims are utilized by the five provided tests. These were determined by de
 * `(> real1 real2)`
 	* This prim takes in two real numbers (or expressions that will return real numbers) and will return #t if `real1` is greater than `real2` in value.
 * `(- nums ...+)`
-  * This prim will take in one or more numbers (or expressions that will return numbers) and return the result of subtracting the numbers from each other. For example, if we had (- 1 2 3), that would be equivalent to (1 - 2 - 3).
+  * This prim will take in one or more numbers (or expressions that will return numbers) and return the result of subtracting the numbers from each other. For example, if we had (- 1 2 3), that would be mathematically equivalent to (1 - 2 - 3).
 * `(* nums ...+)`
-  * This prim will take in one or more numbers (or expressions that will return numbers) and return the result of multiplying the numbers from each other. For example, if we had (* 1 2 3), that would be equivalent to (1 * 2 * 3).
+  * This prim will take in one or more numbers (or expressions that will return numbers) and return the result of multiplying the numbers from each other. For example, if we had (* 1 2 3), that would be mathematically equivalent to (1 * 2 * 3).
 * `(+ nums ...+)`
-  * This prim will take in one or more numbers (or expressions that will return numbers) and return the result of adding the numbers from each other. For example, if we had (+ 1 2 3), that would be equivalent to (1 + 2 + 3).
+  * This prim will take in one or more numbers (or expressions that will return numbers) and return the result of adding the numbers from each other. For example, if we had (+ 1 2 3), that would be mathematically equivalent to (1 + 2 + 3).
 * `(append lists...)`
   * This prim will take in zero or more lists and return a new list which consists of all of the lists appended to each other. For example, if I were to run (append '(1 2) '(3 4) '(5 6)), I would get the list '(1 2 3 4 5 6). If no lists are passed into this prim, the empty list is returned.
 * `(car pair)`
@@ -62,23 +62,28 @@ These prims are utilized by the five provided tests. These were determined by de
 * `(number? var)`
   * This prim will return #t if `var` is a number, and will return #f is `var` is not a number.
 
-
 ## Additional Prims
 
-These prims have been implemented to successfully include strings into this assignment. 
+These prims have been implemented to successfully include strings into this assignment. Also, the division prim is officially supported, as dividing by zero will be handled as a run-time error.
 
 * `(string char...)`
-  * This prim will take zero or more 
-* `(string->list )`
-  * 
-* `(string-ref )`
-  * 
-* `(substring )`
-  * 
-* `(string-append )`
-  * 
+  * This prim will take zero or more characters (such as #\a) and will return a string containing all of the characters in the specified order. If no characters are provided, an empty string will returned.
+* `(string->list str)`
+  * This prim will convert `str` into a list of characters. If `str` is an empty string, an empty list will be returned. The null byte will not be included in this list. 
+* `(string-ref str num)`
+  * This prim will take a string and a non-negative integer and will return the character found at that index of the string, as if it were a list. 
+* `(substring str start)`
+  * This prim will take a string and a non-negative integer and will return a string consisting of the characters after (and including) the specified index (as if it were a list).
+* `(substring str start end)`
+  * This prim will take a string, a non-negative integer, and another non-negative integer and will return a string consisting of the characters after (and including) the specified start index (as if it were a list), but before the specified end index.
+* `(string-append str1 str2)`
+  * This prim will return a new string consisting of `str2` appended to the end of `str1`. For example, if `str1` were "abc" and if `str2` were "def", the outputted string would be "abcdef".
+* `(/ num...+)`
+  * This prim will take in one or more numbers (or expressions that will return numbers) and return the result of dividing the numbers from each other. For example, if we had (/ 1 2 3), that would be mathematically equivalent to (1 / 2 / 3), which is mathematically equivalent to ((1 / 2) / 3). See the run-time error section of this writeup to see how passing 0 into any argument other than the first one is handled.
+
+# Run-Time Errors
 
 
-
+### Honor Pledge
 
 I, Matthew Bock, pledge on my honor that I have not given or received any unauthorized assistance on this assignment.
