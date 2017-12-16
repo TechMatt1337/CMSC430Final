@@ -175,18 +175,23 @@ u8 get_char(s64 i)
 
 /////// STRING FUNCTIONS
 
+u64 stringtolisthelper(char* str)
+{
+    if (str[0] == 0)
+        return V_NULL;
+    u64* p = alloc(2*sizeof(u64));
+    p[0] = ENCODE_CHAR(str[0]);
+    p[1] = stringtolisthelper(str+1);
+    return ENCODE_CONS(p);
+}
+
 u64 prim_string_45_62list(u64 strv)
 {
     ASSERT_TAG(strv, STR_TAG, "first argument to string->list must be a string");
 
     char *str = DECODE_STR(strv);
-    u64 *lst = (u64 *) malloc((strlen(str)+1)*sizeof(u64));
-    int i = 0;
-
-    for (i = 0; i < strlen(str); i++)
-        lst[i] = ENCODE_CHAR((s64)str[i]);
-
-    return ENCODE_CONS(lst);
+    
+    return stringtolisthelper(str);
 }
 GEN_EXPECT1ARGLIST(applyprim_string_45_62list, prim_string_45_62list);
 
