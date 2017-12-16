@@ -305,22 +305,22 @@
      (match op
        ['<=
         (if (< (length es) 2)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: <=  expected at least 2  given "
+            (t-desugar `(raise ',(string-append "ERROR: <=  expected at least 2  given "
                                                       (number->string (length es)))) env)
             (t-desugar `(%%prim ,op . ,es) env))]
        ['=
         (if (< (length es) 2)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: =  expected at least 2  given "
+            (t-desugar `(raise ',(string-append "ERROR: =  expected at least 2  given "
                                                       (number->string (length es)))) env)
             (t-desugar `(%%prim ,op . ,es) env))]
        ['>
         (if (< (length es) 2)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: >  expected at least 2  given "
+            (t-desugar `(raise ',(string-append "ERROR: >  expected at least 2  given "
                                                       (number->string (length es)))) env)
             (t-desugar `(%%prim ,op . ,es) env))]
        ['-
         (if (< (length es) 1)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: -  expected at least 1  given "
+            (t-desugar `(raise ',(string-append "ERROR: -  expected at least 1  given "
                                                       (number->string (length es)))) env)
             (t-desugar `(%%prim ,op . ,es) env))]
        ['*
@@ -344,60 +344,60 @@
        ['car
         (if (= (length es) 1)
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: car  expected 1  given "
+            (t-desugar `(raise ',(string-append "ERROR: car  expected 1  given "
                                                       (number->string (length es)))) env))]
        ['cdr
         (if (= (length es) 1)
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: cdr  expected 1  given "
+            (t-desugar `(raise ',(string-append "ERROR: cdr  expected 1  given "
                                                       (number->string (length es)))) env))]
        ['cons
         (if (= (length es) 2)
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: cons  expected 2  given "
+            (t-desugar `(raise ',(string-append "ERROR: cons  expected 2  given "
                                                       (number->string (length es)))) env))]
        ['eq?
         (if (= (length es) 2)
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: eq?  expected 2  given "
+            (t-desugar `(raise ',(string-append "ERROR: eq?  expected 2  given "
                                                       (number->string (length es)))) env))]
        ['not
         (if (= (length es) 1)
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: not  expected 1  given "
+            (t-desugar `(raise ',(string-append "ERROR: not  expected 1  given "
                                                       (number->string (length es)))) env))]
        ['null?
         (if (= (length es) 1)
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: null?  expected 1  given "
+            (t-desugar `(raise ',(string-append "ERROR: null?  expected 1  given "
                                                       (number->string (length es)))) env))]
        ['number?
         (if (= (length es) 1)
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: number?  expected 1  given "
+            (t-desugar `(raise ',(string-append "ERROR: number?  expected 1  given "
                                                       (number->string (length es)))) env))]
        ['/
         (if (< (length es) 1)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: /  expected at least 1  given "
+            (t-desugar `(raise ',(string-append "ERROR: /  expected at least 1  given "
                                                       (number->string (length es)))) env)
             (t-desugar `(%%prim ,op ,(car es) . ,(map (lambda (v)
                                                     `(if (%%prim = ,v '0)
-                                                         (%%prim halt '"ERROR: divided by zero!")
+                                                         (raise '"ERROR: divided by zero!")
                                                          ,v)) (cdr es))) env))]
        ['string->list
         (if (= (length es) 1)
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: string->list  expected 1  given "
+            (t-desugar `(raise ',(string-append "ERROR: string->list  expected 1  given "
                                                       (number->string (length es)))) env))]
        ['string-ref
         (if (= (length es) 2)
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: string-ref  expected 2  given "
+            (t-desugar `(raise ',(string-append "ERROR: string-ref  expected 2  given "
                                                       (number->string (length es)))) env))]
        ['substring
         (if (or (= (length es) 2) (= (length es) 3))
             (t-desugar `(%%prim ,op . ,es) env)
-            (t-desugar `(%%prim halt ',(string-append "ERROR: substring  expected 2 to 3  given "
+            (t-desugar `(raise ',(string-append "ERROR: substring  expected 2 to 3  given "
                                                       (number->string (length es)))) env))]
        [else
         (t-desugar `(%%prim ,op . ,es) env)]

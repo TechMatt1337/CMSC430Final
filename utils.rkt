@@ -688,6 +688,7 @@
     (match e [`(match ,e0 ,clauses ... (,pat0 ,es ...))
               #:when (not (equal? pat0 'else))
               (rewrite-match `(match ,e0 ,@clauses (,pat0 ,@es) (else (raise "no match"))))]
+             [`(/ ,es ...) `(floor (/ ,@(rewrite-match es)))]
              [`(,e0 . ,es) (cons (rewrite-match e0) (rewrite-match es))]
              [else e]))
   (with-handlers ([exn:fail:contract:arity? (lambda (x)

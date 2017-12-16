@@ -16,7 +16,7 @@
 
 (define (test-top->llvm exp)
   (define top (eval-top-level exp))
-  (define llvm (eval-llvm (top->llvm exp)))
+  (define llvm (eval-llvm (top->llvm `(guard (x ('#t x)) ,exp))))
   (if (equal? top llvm)
       #t
       (begin (display (format "Test-closure-convert: two different values (~a and ~a) before and after closure conversion.\n"
@@ -49,6 +49,7 @@
 
 (define tests
   `(,@(map (path->test 'public) (tests-list "public"))
+    ,@(map (path->test 'release) (tests-list "err"))
     ,@(map (path->test 'release) (tests-list "release"))
     ,@(map (path->test 'secret) (tests-list "secret"))))
 
