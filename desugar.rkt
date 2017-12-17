@@ -241,7 +241,9 @@
 (define (t-apply e env)
   (match e
          [`(,xapply ,e0 ,e1)
-          `(apply ,(t-desugar e0 env)
+          `(apply ,(t-desugar `(if (procedure? ,e0)
+                                  ,e0
+                                  (raise '"ERROR: expected a procedure that can be applied to arguments")) env)
                   ,(t-desugar e1 env))]))
 
 (define (t-when e env)

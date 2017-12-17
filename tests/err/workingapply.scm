@@ -1,0 +1,1 @@
+(apply (lambda x (apply + x)) '(1 2 3))

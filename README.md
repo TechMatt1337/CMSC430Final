@@ -95,15 +95,22 @@ This method does have some issues, however. If we were compiling the program `(r
     * divbyzero
     * divbyzeroguard
 * Prim too few arguments
-  * This run-time error is handled identically to the "Prim too many arguments" run-time error. When desugaring, the code will manually examine each (officially supported) prim and determine how many arguments were passed into it. If the number of arguments does not match the expected number of arguments, the desugaring phase will replace the call entirely with a raise call detailing the specifics. For example, if the desugarer were to see `(eq? 1 2 3 4)`, it would exclude that expression entirely and replace it with `(raise "ERROR: eq?  expected 2  given 4")`.
+  * This run-time error is handled identically to the "Prim too many arguments" run-time error. When desugaring, the code will manually examine each (officially supported) prim and determine how many arguments were passed into it. If the number of arguments does not match the expected number of arguments, the desugaring phase will replace the call entirely with a raise call detailing the specifics. For example, if the desugarer were to see `(eq? 1 2 3 4)`, it would exclude that expression entirely and replace it with `(raise "ERROR: eq?  expected 2  given 4")`, thus returning the string `"ERROR: eq?  expected 2  given 4"`.
   * Tests:
     * toofewprims
     * toofewprimsguard
 * Prim too many arguments
-  * This run-time error is handled identically to the "Prim too few arguments" run-time error. When desugaring, the code will manually examine each (officially supported) prim and determine how many arguments were passed into it. If the number of arguments does not match the expected number of arguments, the desugaring phase will replace the call entirely with a raise call detailing the specifics. For example, if the desugarer were to see `(eq? 1 2 3 4)`, it would exclude that expression entirely and replace it with `(raise "ERROR: eq?  expected 2  given 4")`.
+  * This run-time error is handled identically to the "Prim too few arguments" run-time error. When desugaring, the code will manually examine each (officially supported) prim and determine how many arguments were passed into it. If the number of arguments does not match the expected number of arguments, the desugaring phase will replace the call entirely with a raise call detailing the specifics. For example, if the desugarer were to see `(eq? 1 2 3 4)`, it would exclude that expression entirely and replace it with `(raise "ERROR: eq?  expected 2  given 4")`, thus returning the string `"ERROR: eq?  expected 2  given 4"`.
   * Tests:
     * toomanyprims
     * toomanyprimsguard
+* Non-function value is applied
+  * If the first argument of an apply is not a procedure (according to `procedure?`), the application will give the error: `"ERROR: expected a procedure that can be applied to arguments`. This was accomplished by modifying the desugaring of `(apply e1 e2)` to become `(apply (if (procedure? e1) e1 (raise "ERROR: expected a procedure that can be applied to arguments")) es)`.
+  * In the `racket-compile-eval`, I catch `exn:fail:contract` errors, but perform a check to see if the contract error was from an "application". If it is not from an "application", I the program will crash as all other contract errors are not enforced. This way, while `(apply 1 '(1 2 3))` would return an error message, `(apply + 5)` would crash.
+  * Tests:
+    * applyerror
+    * applyerrorguard
+    * workingapply
 
 
 ### Honor Pledge

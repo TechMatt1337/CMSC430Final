@@ -704,6 +704,16 @@
                                                (sixth split-error)
                                                (seventh split-error)))]
                   [exn:fail:contract:divide-by-zero? (lambda (_) "ERROR: divided by zero!")]
+                  [exn:fail:out-of-memory? (lambda (_) "out of mem")]
+                  [exn:fail:contract? (lambda (x)
+                                             (define error-message
+                                               (vector-ref (struct->vector x) 1))
+                                             (define split-error
+                                               (split-error-message error-message))
+                                             (if (equal? "application" (car split-error))
+                                                 "ERROR: expected a procedure that can be applied to arguments"
+                                                 (begin (pretty-print "Evaluation failed:")
+                                                        (pretty-print x) (pretty-print e) (error 'eval-fail))))]
                   [exn:fail? (lambda (x) (pretty-print "Evaluation failed:") (pretty-print x) (pretty-print e) (error 'eval-fail))])
                  (parameterize ([current-namespace (make-base-namespace)])
                                (namespace-require 'rnrs)

@@ -213,7 +213,7 @@ u64 prim_substring_2(u64 strv, u64 start)
     ASSERT_TAG(start, INT_TAG, "second argument to substring2 must be an integer");
 
     char *str = DECODE_STR(strv);
-    char *sub = (char *) malloc((strlen(str)+1));
+    char *sub = (char *) alloc((strlen(str)+1));
     int i = 0;
 
     for (i = DECODE_INT(start); i <= strlen(str); i++)
@@ -229,7 +229,7 @@ u64 prim_substring_3(u64 strv, u64 start, u64 end)
     ASSERT_TAG(end, INT_TAG, "third argument to substring3 must be an integer");
 
     char *str = DECODE_STR(strv);
-    char *sub = (char *) malloc((strlen(str)+1));
+    char *sub = (char *) alloc((strlen(str)+1));
     int i = 0;
 
     for (i = DECODE_INT(start); i < DECODE_INT(end); i++)
@@ -258,7 +258,7 @@ u64 prim_string_45append(u64 strv1, u64 strv2)
 
     char *str1 = DECODE_STR(strv1);
     char *str2 = DECODE_STR(strv2);
-    char *sub = (char *) malloc((strlen(str1)+strlen(str2)+1));
+    char *sub = (char *) alloc((strlen(str1)+strlen(str2)+1));
 
     strcpy(sub, str1);
     strcat(sub, str2);
@@ -269,7 +269,7 @@ u64 prim_string_45append(u64 strv1, u64 strv2)
 u64 applyprim_string_45append(u64 p)
 {
     if (p == V_NULL) {
-        char *nul = (char *) malloc(1);
+        char *nul = (char *) alloc(1);
         nul[0] = 0;
         return ENCODE_STR(nul);
     }
@@ -465,7 +465,7 @@ u64 prim_halt(u64 v) // halt
 u64 applyprim_vector(u64 lst)
 {
     // pretty terrible, but works
-    u64* buffer = (u64*)malloc(512*sizeof(u64));
+    u64* buffer = (u64*)alloc(512*sizeof(u64));
     u64 l = 0;
     while ((lst&7) == CONS_TAG && l < 512) 
         buffer[l++] = expect_cons(lst, &lst);
