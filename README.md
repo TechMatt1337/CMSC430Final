@@ -15,7 +15,7 @@ The bulk of this submission consists of a combination of the reference solutions
 
 # How to Use 
 
-Please ensure that the Boehm Garbage Collector is installed on your system (https://github.com/ivmai/bdwgc). By default, this submission will assume that the `libgc.a` file is found in `/usr/local/lib/`. If this is not the case, please update the `eval-llvm` method in utils.rkt accordingly to reflect your location of this file. 
+Please ensure that the Boehm Garbage Collector is installed on your system (https://github.com/ivmai/bdwgc). By default, this submission will assume that the `libgc.a` file is found in `/usr/local/lib/`. If this is not the case, please update `libgc-path` varialbe in `utils.rkt` accordingly to reflect your location of this file (for more information regarding this, view the Garbage Collection section). 
 
 To run a test, place your .scm file in either the err, public, release, or secret folders inside of the tests directory. To actually run this test, run the `tests.rkt` file while passing in the name of the .scm file. For example, if I wanted to run the file `test.scm`, I could place it into`./tests/secret/` and execute the command `racket tests.rkt test` to run the test. The program will inform you if the evaluated scheme is equal to the evaluated LLVM (ensuring that the desugaring and compilation was successful) and will produce the binary `bin` which can be ran.
 
@@ -25,7 +25,7 @@ If you would just like to see the raw LLVM code or manually create the binary, t
 
 ## Required Prims
 
-These prims are utilized by the five provided tests. These were determined by determining which prims are in the five tests (as determined via the `prim?` method). While my project technically supports all of the prims that project five supports, these are the ones that I "officially support" (as discussed in class).
+These prims are utilized by the five provided tests. These were determined by determining which prims are in the five tests (as determined via the `prim?` method). While my project unofficially supports all of the prims that project five supports, these are the ones that I officially support (as discussed in class).
 
 * `(<= real1 real2)`
   * This prim takes in two real numbers (or expressions that will return real numbers) and will return #t if `real1` is less than or equal to `real2` in value.
@@ -111,6 +111,23 @@ This method does have some issues, however. If we were compiling the program `(r
     * applyerror
     * applyerrorguard
     * workingapply
+
+# Garbage Collection
+
+The generated binary will be compiled with the Boehm Garbage Collector. The program will assume that `libgc.a` can be found in this location: `/usr/local/lib/libgc.a`. To change this variable, modify the variable `libgc-path` with the appropriate location. For example, if this library were to be in `/usr/lib/libgc.a` on your machine, you would change the line `(build-path "/" "usr" "local" "lib" "libgc.a")` to `build-path "/" "usr" "lib" "libgc.a"`. The files that need to be inclued are stored in this repo (which is bad practice, but solves the headache of using dynamic paths), so the `gc-include-path` variable should never need to be modified. 
+
+The major changes to the project to accomplish this can be found in `closure-convert.rkt`, as whenever a function call is made in LLVM it will wrap it in an allocation. For example, if we previously had the code `%val = call i64 @prim_car(i64 %arg)`, this will now be transformed into three instructions:
+  * `%valptr = alloca i64, align 8`
+  * `%val = i64 @prim_car(i64 %val)`
+  * `store volatile i64 %val, i64* %valptr, align 8`
+This was done to ensure that premature frees were not executed.
+
+I also have concerns regarding my implementation, as every test ran with valgrind always return the same heap status, being that there were 8 allocations and 7 frees. I cannot determine where the last allocation is that is not being freed, but I have concerns regarding the accuracy of this. In an attempt to debug this, I created a test `reallylong` in the `/tests/err/` folder which consists of many cons. For some reason, this also returns that there were 8 allocations and 7 frees, which does not make sense. 
+
+At this point, I was unable to create a new tagging scheme in `header.cpp`, as I am unsure of whether or not my garbage collection is actually working correctly, and I would have no way to ensure that my tagging scheme worked as planned. I have ensured that the GC is actually being linked with my program through the use of various tools (such as Binary Ninja and the `objdump` command), so I am unsure as to what the issue is. 
+
+I have included an image in this repo detailing the issue titled `gcissues.png`. Even with these errors and as far I can tell, the program is successful in implementing the GC.
+
 
 
 ### Honor Pledge

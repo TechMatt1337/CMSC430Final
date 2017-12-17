@@ -31,10 +31,10 @@
 (define project-path (current-directory))
 (define libgc-path
   (path->string
-   (build-path project-path "lib" "local" "lib" "libgc.a")))
+   (build-path "/" "usr" "local" "lib" "libgc.a")))
 (define gc-include-path
   (path->string
-   (build-path project-path "lib" "local" "include")))
+   (build-path project-path "include")))
 
 (define clang++-path
   (let ([clang++-path-submit-server "/opt/llvm-3.9.0/bin/clang++"])
@@ -625,15 +625,15 @@
   ; freshly compile the header / runtime library if not already
   (when (not recent-header)
         (set! recent-header #t)
-        ;(system (string-append clang++-path " header.cpp " " -I " gc-include-path " -S -emit-llvm -o header.ll"))
-        (system (string-append clang++-path " header.cpp "
-                               " /usr/local/lib/libgc.a -I ./include/ -pthread -S -emit-llvm -o header.ll")))
+        (system (string-append clang++-path " header.cpp " " -g -I " gc-include-path " -S -emit-llvm -o header.ll")))
+        ;(system (string-append clang++-path " header.cpp "
+                               ;" /usr/local/lib/libgc.a -I ./include/ -pthread -S -emit-llvm -o header.ll")))
   (define header-str (read-string 299999 (open-input-file "header.ll" #:mode 'text)))
   (define llvm (string-append header-str "\n\n;;;;;;\n\n" llvm-str))
   (display llvm (open-output-file "combined.ll" #:exists 'replace))
-  ;(system (string-append clang++-path " combined.ll " libgc-path " -I " gc-include-path " -lpthread -o bin"))
-  (system (string-append clang++-path " combined.ll "
-                         " /usr/local/lib/libgc.a -I ./include/ -pthread -o bin"))
+  (system (string-append clang++-path " combined.ll " libgc-path " -g -I " gc-include-path " -lpthread -o bin"))
+  ;(system (string-append clang++-path " combined.ll "
+                         ;" /usr/local/lib/libgc.a -I ./include/ -pthread -o bin"))
   (match-define `(,out-port ,in-port ,id ,err-port ,callback) (process "./bin"))
   (define starttime (current-milliseconds))
   (let loop ()

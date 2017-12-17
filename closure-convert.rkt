@@ -556,19 +556,20 @@
            [`(let ([,x (prim ,op ,ys ...)]) ,e0)
             (define strptr (gensym 'strptr))
             (define (set-chars lst index)
+              (define tmpptr (gensym 'tmpptr))
               (define ch (gensym 'ch))
               (define chptr (gensym 'chptr))
                 (if (empty? lst)
                     '()
                     (cons (apply string-append
                                  `(,(comment-line
-                                     "  %" (s-> ptr) " = alloca i64, align 8"
+                                     "  %" (s-> tmpptr) " = alloca i8, align 8"
                                      "setup var pointer")
                                    ,(comment-line "  %" (s-> ch)
                                                " = call i8 @get_char(i64 %" (symbol->string (car lst)) ")"
                                                "get the char value")
                                    ,(comment-line
-                                    "  store volatile i64 %" (s-> ch) ", i64* %" (s-> ptr) ", align 8"
+                                    "  store volatile i8 %" (s-> ch) ", i8* %" (s-> tmpptr) ", align 8"
                                     "storing value into var pointer")
                                    ,(comment-line "  %" (s-> chptr)
                                                   " = getelementptr i8, i8* %"
