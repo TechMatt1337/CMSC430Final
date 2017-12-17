@@ -66,10 +66,10 @@
                                               (exec)))
                              (if (eq? exec-result #t)
                                  (begin
-                                   (display "Test ")
-                                   (display test-name)
-                                   (display " passed.")
-                                   (newline)
+                                   ;(display "Test ")
+                                   ;(display test-name)
+                                   ;(display " passed.")
+                                   ;(newline)
                                    (+ count 1))
                                  (begin
                                    (display "Test ")
