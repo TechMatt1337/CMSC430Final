@@ -1,6 +1,6 @@
 
 
-//#include "gc.h"    // Add back in and change tags if we want to use GC
+#include "gc.h"    // Add back in and change tags if we want to use GC
 #include "stdio.h"
 #include "stdlib.h"
 #include "stdint.h"
@@ -113,9 +113,9 @@ typedef uint8_t u8;
 
 u64* alloc(const u64 m)
 {
-    return (u64*)(malloc(m));
+    //return (u64*)(malloc(m));
     //return new u64[m];
-    //return (u64*)GC_MALLOC(m);
+    return (u64*)GC_MALLOC(m);
 }
 
 void fatal_err(const char* msg)

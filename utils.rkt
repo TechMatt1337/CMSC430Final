@@ -626,12 +626,14 @@
   (when (not recent-header)
         (set! recent-header #t)
         ;(system (string-append clang++-path " header.cpp " " -I " gc-include-path " -S -emit-llvm -o header.ll"))
-        (system (string-append clang++-path " header.cpp " " -S -emit-llvm -o header.ll")))
+        (system (string-append clang++-path " header.cpp "
+                               " /usr/local/lib/libgc.a -I ./include/ -pthread -S -emit-llvm -o header.ll")))
   (define header-str (read-string 299999 (open-input-file "header.ll" #:mode 'text)))
   (define llvm (string-append header-str "\n\n;;;;;;\n\n" llvm-str))
   (display llvm (open-output-file "combined.ll" #:exists 'replace))
   ;(system (string-append clang++-path " combined.ll " libgc-path " -I " gc-include-path " -lpthread -o bin"))
-  (system (string-append clang++-path " combined.ll " " -o bin"))
+  (system (string-append clang++-path " combined.ll "
+                         " /usr/local/lib/libgc.a -I ./include/ -pthread -o bin"))
   (match-define `(,out-port ,in-port ,id ,err-port ,callback) (process "./bin"))
   (define starttime (current-milliseconds))
   (let loop ()
@@ -704,7 +706,7 @@
                                                (sixth split-error)
                                                (seventh split-error)))]
                   [exn:fail:contract:divide-by-zero? (lambda (_) "ERROR: divided by zero!")]
-                  [exn:fail:out-of-memory? (lambda (_) "out of mem")]
+                  [exn:fail:out-of-memory? (lambda (x) "out of mem")]
                   [exn:fail:contract? (lambda (x)
                                              (define error-message
                                                (vector-ref (struct->vector x) 1))
