@@ -11,7 +11,7 @@ This project will convert scheme code into LLVM code through a series of reducti
 5. Closure Conversion
 6. Conversion to LLVM
 
-The bulk of this submission consists of a combination of the reference solutions with minor modifications to support new features. These modifications will be made clear when discussing the features that required the modifications, although most of them can be found within the `header.cpp`, `utils.rkt`, and `tests.rkt` files. 
+The bulk of this submission consists of a combination of the reference solutions with minor modifications to support new features. These modifications will be made clear when discussing the features that required the modifications, although most of them can be found within the `header.cpp`, `utils.rkt`, `closure-convert.rkt` and `tests.rkt` files. 
 
 # How to Use 
 
@@ -58,7 +58,7 @@ These prims are utilized by the five provided tests. These were determined by de
 
 ## Additional Prims
 
-These prims have been implemented to successfully include strings into this assignment. Also, the division prim is officially supported, as dividing by zero will be handled as a run-time error.
+These prims have been implemented to successfully include strings into this assignment. All of the prims in this section should be considered officially supported.
 
 * `(string char...)`
   * This prim will take zero or more characters (such as #\a) and will return a string containing all of the characters in the specified order. If no characters are provided, an empty string will returned.
@@ -81,7 +81,7 @@ These prims have been implemented to successfully include strings into this assi
 
 To catch run-time errors, I use the strategy of throwing error messages within the program and catching them with a global guard. When running "eval-top-level", I have modifed the `with-handlers` section of the `racket-compile-eval` function to listen for a variety of error messages such as `exn:fail:contract:arity?` and `exn:fail:contract:divide-by-zero?`. When these error messages occur, I parse the error information out of the struct to determine the information from the error. For example, while a `exn:fail:contract:arity?` might return something along the lines of [(exn:fail:contract:arity
  "eq?: arity mismatch;\n the expected number of arguments does not match the given number\n  expected: 2\n  given: 4\n  arguments...:\n   1\n   5\n   4\n   0"
- #<continuation-mark-set>)], I parse this error and return with an error message stating: "ERROR: eq?  expected 2  given 4". When converting the code to LLVM code, I will add in additional logic during the desugaring phase of compilation which will check for various errors. For example, if I see the expression `(eq? '1 '2 '3 '4)`, I know that that is a contract violation as `eq?` only takes two arguments. Thus, I will replace that expression with `(raise "ERROR: eq?  expected 2  given 4")`. While I am aware that this could easily be done by introduceing an if expression within the code itself, that would only add to the complexity of the program and would make debugging more difficult. During the compilation process, the code to be desugared will be wrapped with an added gaurd that will look for raised errors and just return the error raised.
+ #<continuation-mark-set>)], I parse this error and return with an error message stating: "ERROR: eq?  expected 2  given 4". When converting the code to LLVM code, I will add in additional logic during the desugaring phase of compilation which will check for various errors. For example, if I see the expression `(eq? '1 '2 '3 '4)`, I know that that is a contract violation as `eq?` only takes two arguments. Thus, I will replace that expression with `(raise "ERROR: eq?  expected 2  given 4")`. While I am aware that this could easily be done by introducing an if expression within the code itself, that would only add to the complexity of the program and would make debugging more difficult. During the compilation process, the code to be desugared will be wrapped with an added guard that will look for raised errors and just return the error raised.
 
 This method was chosen due to the fact that guard statements can catch various run-time errors. For example, if we had the program `(guard (x ('#t '5')) (/ '1 '0))`, `eval-top-level` would return '5, which is expected. If we were to halt as soon as this error occurred, our program would just halt with the given error message instead of being captured by the guard. Thus, by doing this method of error throwing, both our `eval-top-level` and LLVM code will return '5.
 
@@ -92,25 +92,31 @@ This method does have some issues, however. If we were compiling the program `(r
 * Dividing by zero
   * When dividing by zero, an error message should appear stating `"ERROR: divided by zero!"`. This has been accomplished by desugaring `(/ a b c)` into `(/ a (if (= b 0) (raise "ERROR: divided by zero!") b) (if (= c 0) (raise "ERROR: divided by zero!") c))`.
   * Tests:
-    * divbyzero
-    * divbyzeroguard
+    * divbyzero - should return error message
+    * divbyzeroguard - should return valid output
 * Prim too few arguments
   * This run-time error is handled identically to the "Prim too many arguments" run-time error. When desugaring, the code will manually examine each (officially supported) prim and determine how many arguments were passed into it. If the number of arguments does not match the expected number of arguments, the desugaring phase will replace the call entirely with a raise call detailing the specifics. For example, if the desugarer were to see `(eq? 1 2 3 4)`, it would exclude that expression entirely and replace it with `(raise "ERROR: eq?  expected 2  given 4")`, thus returning the string `"ERROR: eq?  expected 2  given 4"`.
   * Tests:
-    * toofewprims
-    * toofewprimsguard
+    * toofewprims - should return error message
+    * toofewprimsguard - should return valid output
 * Prim too many arguments
   * This run-time error is handled identically to the "Prim too few arguments" run-time error. When desugaring, the code will manually examine each (officially supported) prim and determine how many arguments were passed into it. If the number of arguments does not match the expected number of arguments, the desugaring phase will replace the call entirely with a raise call detailing the specifics. For example, if the desugarer were to see `(eq? 1 2 3 4)`, it would exclude that expression entirely and replace it with `(raise "ERROR: eq?  expected 2  given 4")`, thus returning the string `"ERROR: eq?  expected 2  given 4"`.
   * Tests:
-    * toomanyprims
-    * toomanyprimsguard
+    * toomanyprims - should return error message
+    * toomanyprimsguard - should return valid output
 * Non-function value is applied
   * If the first argument of an apply is not a procedure (according to `procedure?`), the application will give the error: `"ERROR: expected a procedure that can be applied to arguments`. This was accomplished by modifying the desugaring of `(apply e1 e2)` to become `(apply (if (procedure? e1) e1 (raise "ERROR: expected a procedure that can be applied to arguments")) es)`.
   * In the `racket-compile-eval`, I catch `exn:fail:contract` errors, but perform a check to see if the contract error was from an "application". If it is not from an "application", I the program will crash as all other contract errors are not enforced. This way, while `(apply 1 '(1 2 3))` would return an error message, `(apply + 5)` would crash.
   * Tests:
-    * applyerror
-    * applyerrorguard
-    * workingapply
+    * applyerror - should return error message
+    * applyerrorguard - should return valid output
+    * workingapply - normal use of apply
+* Non-number value is passed into arithmetic functions
+  * If any arguments for any of the supported arithmetic functions (`+`, `-`, `*`, `/`) are not integers, the program will return the error `"ERROR: [op] received a non-number argument"`. This has been accomplished by desugaring the arguments in a certain way. For example, `(+ '1 '2)` will desugar into `(+ (if (number? '1) '1 (raise "ERROR: + received a non-number argument")) (if (number? '2) '2 (raise "ERROR: + received a non-number argument")))`.
+  * If the `/` function receives both a non-number value and a value that would trigger the division by zero error catching, whichever one that occurred first would be thrown. For example, if we were compiling `(/ 1 0 'a)`, the program would throw a division by zero error. If we were compiling `(/ 1 'a 0)`, the program would throw a non-number argument error.
+  * Tests:
+    * arith - should return error message
+    * arithguard - should return valid output
 
 # Garbage Collection
 
@@ -120,13 +126,13 @@ The major changes to the project to accomplish this can be found in `closure-con
   * `%valptr = alloca i64, align 8`
   * `%val = i64 @prim_car(i64 %val)`
   * `store volatile i64 %val, i64* %valptr, align 8`
-This was done to ensure that premature frees were not executed.
+This was done to ensure that premature frees do not occur.
 
 I also have concerns regarding my implementation, as every test ran with valgrind always return the same heap status, being that there were 8 allocations and 7 frees. I cannot determine where the last allocation is that is not being freed, but I have concerns regarding the accuracy of this. In an attempt to debug this, I created a test `reallylong` in the `/tests/err/` folder which consists of many cons. For some reason, this also returns that there were 8 allocations and 7 frees, which does not make sense. 
 
 At this point, I was unable to create a new tagging scheme in `header.cpp`, as I am unsure of whether or not my garbage collection is actually working correctly, and I would have no way to ensure that my tagging scheme worked as planned. I have ensured that the GC is actually being linked with my program through the use of various tools (such as Binary Ninja and the `objdump` command), so I am unsure as to what the issue is. 
 
-I have included an image in this repo detailing the issue titled `gcissues.png`. Even with these errors and as far I can tell, the program is successful in implementing the GC.
+I have included an image in this repo detailing the issue titled `gcissues.png`. Even with these errors and as far I can tell, the program is successful in implementing the garbage collector. All tests ran via the `tests.rkt` program will implement this garbage collector.
 
 
 

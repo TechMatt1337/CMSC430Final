@@ -321,22 +321,48 @@
                                                       (number->string (length es)))) env)
             (t-desugar `(%%prim ,op . ,es) env))]
        ['-
-        (if (< (length es) 1)
+        (if (= (length es) 0)
             (t-desugar `(raise ',(string-append "ERROR: -  expected at least 1  given "
-                                                      (number->string (length es)))) env)
-            (t-desugar `(%%prim ,op . ,es) env))]
+                                                (number->string (length es)))) env)
+            (if (= (length es) 1)
+                (t-desugar `(%%prim ,op '0 . ,(map (lambda (v)
+                                                     `(if (%%prim number? ,v)
+                                                          ,v
+                                                          (raise '"ERROR: - received a non-number argument")))
+                                                   es)) env)
+                (t-desugar `(%%prim ,op . ,(map (lambda (v)
+                                                  `(if (%%prim number? ,v)
+                                                       ,v
+                                                       (raise '"ERROR: - received a non-number argument")))
+                                                es)) env)))]
        ['*
         (if (= (length es) 0)
             (t-desugar `(%%prim ,op '1 '1) env)
             (if (= (length es) 1)
-                (t-desugar `(%%prim ,op '1 . ,es) env)
-                (t-desugar `(%%prim ,op . ,es) env)))]
+                (t-desugar `(%%prim ,op '1 . ,(map (lambda (v)
+                                                     `(if (%%prim number? ,v)
+                                                          ,v
+                                                          (raise '"ERROR: * received a non-number argument")))
+                                                   es)) env)
+                (t-desugar `(%%prim ,op . ,(map (lambda (v)
+                                                     `(if (%%prim number? ,v)
+                                                          ,v
+                                                          (raise '"ERROR: * received a non-number argument")))
+                                                   es)) env)))]
        ['+
         (if (= (length es) 0)
             (t-desugar `(%%prim ,op '0 '0) env)
             (if (= (length es) 1)
-                (t-desugar `(%%prim ,op '0 . ,es) env)
-                (t-desugar `(%%prim ,op . ,es) env)))]
+                (t-desugar `(%%prim ,op '0 . ,(map (lambda (v)
+                                                     `(if (%%prim number? ,v)
+                                                          ,v
+                                                          (raise '"ERROR: + received a non-number argument")))
+                                                   es)) env)
+                (t-desugar `(%%prim ,op . ,(map (lambda (v)
+                                                     `(if (%%prim number? ,v)
+                                                          ,v
+                                                          (raise '"ERROR: + received a non-number argument")))
+                                                   es)) env)))]
        ['append
         (if (= (length es) 0)
             (t-desugar `(%%prim ,op '() '()) env)
@@ -382,10 +408,15 @@
         (if (< (length es) 1)
             (t-desugar `(raise ',(string-append "ERROR: /  expected at least 1  given "
                                                       (number->string (length es)))) env)
-            (t-desugar `(%%prim ,op ,(car es) . ,(map (lambda (v)
-                                                    `(if (%%prim = ,v '0)
-                                                         (raise '"ERROR: divided by zero!")
-                                                         ,v)) (cdr es))) env))]
+            (t-desugar `(%%prim ,op (if (%%prim number? ,(car es))
+                                        ,(car es)
+                                        (raise '"ERROR: / received a non-number argument"))
+                                . ,(map (lambda (v)
+                                          `(if (%%prim number? ,v)
+                                               (if (%%prim = ,v '0)
+                                                   (raise '"ERROR: divided by zero!")
+                                                   ,v)
+                                               (raise '"ERROR: / received a non-number argument"))) (cdr es))) env))]
        ['string->list
         (if (= (length es) 1)
             (t-desugar `(%%prim ,op . ,es) env)
