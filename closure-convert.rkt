@@ -396,36 +396,67 @@
     (string-append extline "; " cmt "\n"))
 
   (define (e->llvm e)
+    (define ptr (gensym 'ptr))
     (match e
            [`(let ([,x '#t]) ,e0)
             (string-append
              (comment-line
+              "  %" (s-> ptr) " = alloca i64, align 8"
+              "setup var pointer")
+             (comment-line
               "  %" (s-> x) " = call i64 @const_init_true()"
               "quoted #t")
+             (comment-line
+              "  store volatile i64 %" (s-> x) ", i64* %" (s-> ptr) ", align 8"
+              "storing value into var pointer")
              (e->llvm e0))]
            [`(let ([,x '#f]) ,e0)
             (string-append
              (comment-line
+              "  %" (s-> ptr) " = alloca i64, align 8"
+              "setup var pointer")
+             (comment-line
               "  %" (s-> x) " = call i64 @const_init_false()"
               "quoted #f")
+             (comment-line
+              "  store volatile i64 %" (s-> x) ", i64* %" (s-> ptr) ", align 8"
+              "storing value into var pointer")
              (e->llvm e0))]
            [`(let ([,x '()]) ,e0)
             (string-append
              (comment-line
+              "  %" (s-> ptr) " = alloca i64, align 8"
+              "setup var pointer")
+             (comment-line
               "  %" (s-> x) " = add i64 0, 0"
               "quoted ()")
+             (comment-line
+              "  store volatile i64 %" (s-> x) ", i64* %" (s-> ptr) ", align 8"
+              "storing value into var pointer")
              (e->llvm e0))]
            [`(let ([,x ',(? integer? dat)]) ,e0)
             (string-append
              (comment-line
+              "  %" (s-> ptr) " = alloca i64, align 8"
+              "setup var pointer")
+             (comment-line
               "  %" (s-> x) " = call i64 @const_init_int(i64 " (number->string dat) ")"
               "quoted int")
+             (comment-line
+              "  store volatile i64 %" (s-> x) ", i64* %" (s-> ptr) ", align 8"
+              "storing value into var pointer")
              (e->llvm e0))]
            [`(let ([,x ',(? char? dat)]) ,e0)
             (string-append
              (comment-line
+              "  %" (s-> ptr) " = alloca i64, align 8"
+              "setup var pointer")
+             (comment-line
               "  %" (s-> x) " = call i64 @const_init_char(i64 " (number->string (char->integer dat)) ")"
               "quoted char")
+             (comment-line
+              "  store volatile i64 %" (s-> x) ", i64* %" (s-> ptr) ", align 8"
+              "storing value into var pointer")
              (e->llvm e0))]
            [`(let ([,x ',(? string? dat)]) ,e0)
             (define dx (gensym 'str))
@@ -436,8 +467,14 @@
                       lenstr " c\"" dat "\\00\", align 8\n"))
             (string-append
              (comment-line
+              "  %" (s-> ptr) " = alloca i64, align 8"
+              "setup var pointer")
+             (comment-line
               "  %" (s-> x) " = call i64 @const_init_string(i8* getelementptr inbounds (" lenstr ", " lenstr "* @" (s-> dx) ", i32 0, i32 0))"
               "quoted string")
+             (comment-line
+              "  store volatile i64 %" (s-> x) ", i64* %" (s-> ptr) ", align 8"
+              "storing value into var pointer")
              (e->llvm e0))]
            [`(let ([,x ',(? symbol? dat)]) ,e0)
             (define dx (gensym 'sym))
@@ -448,8 +485,14 @@
                       lenstr " c\"" (symbol->string dat) "\\00\", align 8\n"))
             (string-append
              (comment-line
+              "  %" (s-> ptr) " = alloca i64, align 8"
+              "setup var pointer")
+             (comment-line
               "  %" (s-> x) " = call i64 @const_init_symbol(i8* getelementptr inbounds (" lenstr ", " lenstr "* @" (s-> dx) ", i32 0, i32 0))"
               "quoted string")
+             (comment-line
+              "  store volatile i64 %" (s-> x) ", i64* %" (s-> ptr) ", align 8"
+              "storing value into var pointer")
              (e->llvm e0))]
            [`(let ([,x (make-closure ,lamx ,xs ...)]) ,e0)
             (define cptr (gensym 'cloptr))
@@ -460,8 +503,14 @@
             (define f (gensym 'f))
             (apply string-append
                    `(,(comment-line
+                       "  %" (s-> ptr) " = alloca i64*, align 8"
+                       "setup var pointer")
+                     ,(comment-line
                        "  %" (s-> cptr) " = call i64* @alloc(i64 " (number->string (* (+ (length xs) 1) 8)) ")"
                        "malloc")
+                     ,(comment-line
+                       "  store volatile i64* %" (s-> cptr) ", i64** %" (s-> ptr) ", align 8"
+                       "storing value into var pointer")
                      ,@(map (lambda (iptr n)
                               (comment-line
                                "  %" (s-> iptr) " = getelementptr inbounds i64, i64* %" (s-> cptr) ", i64 " (number->string n)
@@ -512,9 +561,15 @@
                 (if (empty? lst)
                     '()
                     (cons (apply string-append
-                                 `(,(comment-line "  %" (s-> ch)
+                                 `(,(comment-line
+                                     "  %" (s-> ptr) " = alloca i64, align 8"
+                                     "setup var pointer")
+                                   ,(comment-line "  %" (s-> ch)
                                                " = call i8 @get_char(i64 %" (symbol->string (car lst)) ")"
                                                "get the char value")
+                                   ,(comment-line
+                                    "  store volatile i64 %" (s-> ch) ", i64* %" (s-> ptr) ", align 8"
+                                    "storing value into var pointer")
                                    ,(comment-line "  %" (s-> chptr)
                                                   " = getelementptr i8, i8* %"
                                                   (s-> strptr) ", i64 " (number->string index)
@@ -537,27 +592,48 @@
                     "get a pointer to the string")
                   ,@(set-chars ys 0)
                   ,(comment-line
+                   "  %" (s-> ptr) " = alloca i64, align 8"
+                   "setup var pointer")
+                  ,(comment-line
                     "  %" (s-> x) " = call i64 @const_init_string(i8* getelementptr inbounds (" lenstr ", " lenstr "* @" (s-> dx) ", i32 0, i32 0))"
                     "quoted string")
+                  ,(comment-line "  store i64 %" (s-> x) ", i64* %"
+                    (s-> ptr) ", align 8"
+                    "set current char equal to passed in")
                   ,(e->llvm e0)))]
               ['substring
                (if (eq? 2 (length ys))
                    (string-append
                     (comment-line
+                     "  %" (s-> ptr) " = alloca i64, align 8"
+                     "setup var pointer")
+                    (comment-line
                      "  %" (s-> x) " = call i64 @prim_substring_2(i64 %" (s-> (car ys)) ", i64 %" (s-> (car (cdr ys))) ")"
                      "substring with no end")
+                    (comment-line "  store i64 %" (s-> x) ", i64* %"
+                     (s-> ptr) ", align 8"
+                     "set current char equal to passed in")
                     (e->llvm e0))
                    (if (eq? 3 (length ys))
                        (string-append
                         (comment-line
+                         "  %" (s-> ptr) " = alloca i64, align 8"
+                         "setup var pointer")
+                        (comment-line
                          "  %" (s-> x) " = call i64 @prim_substring_3(i64 %" (s-> (car ys))
                          ", i64 %" (s-> (car (cdr ys))) ", i64 %" (s-> (car (cdr (cdr ys)))) ")"
-                         "substring with no end")
+                         "substring with end")
+                        (comment-line "  store i64 %" (s-> x) ", i64* %"
+                         (s-> ptr) ", align 8"
+                         "set current char equal to passed in")
                     (e->llvm e0))
                        '()))]
               
               [else
                (string-append
+                (comment-line
+                 "  %" (s-> ptr) " = alloca i64, align 8"
+                 "setup var pointer")
                 (comment-line
                  "  %" (s-> x) " = call i64 @" (prim-name op) "("
                  (if (null? ys)
@@ -567,12 +643,21 @@
                       (foldl (lambda (y acc) (string-append acc ", i64 %" (s-> y))) "" (cdr ys))))
                  ")"
                  (string-append "call " (prim-name op)))
+                (comment-line "  store i64 %" (s-> x) ", i64* %"
+                 (s-> ptr) ", align 8"
+                 "set current char equal to passed in")
                 (e->llvm e0))])]
            [`(let ([,x (apply-prim ,op ,y)]) ,e0)
             (string-append
              (comment-line
+              "  %" (s-> ptr) " = alloca i64, align 8"
+              "setup var pointer")
+             (comment-line
               "  %" (s-> x) " = call i64 @" (prim-applyname op) "(i64 %" (s-> y) ")"
               (string-append "call " (prim-applyname op)))
+             (comment-line "  store i64 %" (s-> x) ", i64* %"
+              (s-> ptr) ", align 8"
+              "set current char equal to passed in")
              (e->llvm e0))]
            [`(if ,x ,e0 ,e1)
             (define cmp (gensym 'cmp))
