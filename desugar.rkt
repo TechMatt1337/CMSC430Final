@@ -328,16 +328,16 @@
                                                 (number->string (length es)))) env)
             (if (= (length es) 1)
                 (t-desugar `(%%prim ,op '0 . ,(map (lambda (v)
-                                                     `(let ([,tmp ,v])
+                                                     (t-desugar `(let ([,tmp ,(t-desugar v env)])
                                                         (if (%%prim number? ,tmp)
                                                           ,tmp
-                                                          (raise '"ERROR: - received a non-number argument"))))
+                                                          (raise '"ERROR: - received a non-number argument"))) env))
                                                    es)) env)
                 (t-desugar `(%%prim ,op . ,(map (lambda (v)
-                                                  `(let ([,tmp ,v])
+                                                  (t-desugar `(let ([,tmp ,(t-desugar v env)])
                                                      (if (%%prim number? ,tmp)
                                                          ,tmp
-                                                         (raise '"ERROR: - received a non-number argument"))))
+                                                         (raise '"ERROR: - received a non-number argument"))) env))
                                                 es)) env)))]
        ['*
         (define tmp (gensym 'tmp))
@@ -345,16 +345,16 @@
             (t-desugar `(%%prim ,op '1 '1) env)
             (if (= (length es) 1)
                 (t-desugar `(%%prim ,op '1 . ,(map (lambda (v)
-                                                     `(let ([,tmp ,v])
+                                                     (t-desugar `(let ([,tmp ,(t-desugar v env)])
                                                         (if (%%prim number? ,tmp)
                                                             ,tmp
-                                                            (raise '"ERROR: * received a non-number argument"))))
+                                                            (raise '"ERROR: * received a non-number argument"))) env))
                                                    es)) env)
                 (t-desugar `(%%prim ,op . ,(map (lambda (v)
-                                                  `(let ([,tmp ,v])
+                                                  (t-desugar `(let ([,tmp ,(t-desugar v env)])
                                                      (if (%%prim number? ,tmp)
                                                          ,tmp
-                                                         (raise '"ERROR: * received a non-number argument"))))
+                                                         (raise '"ERROR: * received a non-number argument"))) env))
                                                   es)) env)))]
        ['+
         (define tmp (gensym 'tmp))
@@ -362,16 +362,16 @@
             (t-desugar `(%%prim ,op '0 '0) env)
             (if (= (length es) 1)
                 (t-desugar `(%%prim ,op '0 . ,(map (lambda (v)
-                                                     `(let ([,tmp ,v])
+                                                     (t-desugar `(let ([,tmp ,(t-desugar v env)])
                                                         (if (%%prim number? ,tmp)
                                                             ,tmp
-                                                            (raise '"ERROR: + received a non-number argument"))))
+                                                            (raise '"ERROR: + received a non-number argument"))) env))
                                                      es)) env)
                 (t-desugar `(%%prim ,op . ,(map (lambda (v)
-                                                  `(let ([,tmp ,v])
+                                                  (t-desugar `(let ([,tmp ,(t-desugar v env)])
                                                      (if (%%prim number? ,tmp)
                                                          ,tmp
-                                                         (raise '"ERROR: + received a non-number argument"))))
+                                                         (raise '"ERROR: + received a non-number argument"))) env))
                                                   es)) env)))]
        ['append
         (if (= (length es) 0)
@@ -424,12 +424,12 @@
                                         ,tmp
                                         (raise '"ERROR: / received a non-number argument")))
                                 . ,(map (lambda (v)
-                                          `(let ([,tmp ,v])
+                                          (t-desugar `(let ([,tmp ,(t-desugar v env)])
                                              (if (%%prim number? ,tmp)
                                                  (if (%%prim = ,tmp '0)
                                                      (raise '"ERROR: divided by zero!")
                                                      ,tmp)
-                                                 (raise '"ERROR: / received a non-number argument")))) (cdr es))) env))]
+                                                 (raise '"ERROR: / received a non-number argument"))) env)) (cdr es))) env))]
        ['string->list
         (if (= (length es) 1)
             (t-desugar `(%%prim ,op . ,es) env)
