@@ -112,7 +112,7 @@ This method does have some issues, however. If we were compiling the program `(r
     * applyerrorguard - should return valid output
     * workingapply - normal use of apply
 * Non-number values are passed into `-`
-  * If any arguments passed into `-` are not an integers, the program will return the error `"ERROR: - received a non-number argument"`. This has been accomplished by desugaring the arguments in a certain way. For example, `(- '1 '2)` will desugar into `(- (let ([tmp '1]) (if (number? tmp) tmp (raise "ERROR: + received a non-number argument"))) (let ([tmp '2]) (if (number? '2) '2 (raise "ERROR: + received a non-number argument"))))`.
+  * If any arguments passed into `-` are not integers, the program will return the error `"ERROR: - received a non-number argument"`. This has been accomplished by desugaring the arguments in a certain way. For example, `(- '1 '2)` will desugar into `(- (let ([tmp '1]) (if (number? tmp) tmp (raise "ERROR: + received a non-number argument"))) (let ([tmp '2]) (if (number? '2) '2 (raise "ERROR: + received a non-number argument"))))`.
   * This can theoretically be applied to any of the supported arithmetic functions, but it has been only implemented on `-` due to time constraints.
   * Tests:
     * arith - should return error message
