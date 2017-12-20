@@ -105,15 +105,15 @@ This method does have some issues, however. If we were compiling the program `(r
     * toomanyprims - should return error message
     * toomanyprimsguard - should return valid output
 * Non-function value is applied
-  * If the first argument of an apply is not a procedure (according to `procedure?`), the application will give the error: `"ERROR: expected a procedure that can be applied to arguments`. This was accomplished by modifying the desugaring of `(apply e1 e2)` to become `(apply (if (procedure? e1) e1 (raise "ERROR: expected a procedure that can be applied to arguments")) es)`.
+  * If the first argument of an apply is not a procedure (according to `procedure?`), the application will give the error: `"ERROR: expected a procedure that can be applied to arguments`. This was accomplished by modifying the desugaring of `(apply e1 e2)` to become `(apply (let ([tmp e1]) (if (procedure? tmp) tmp (raise "ERROR: expected a procedure that can be applied to arguments"))) e2)`.
   * In the `racket-compile-eval`, I catch `exn:fail:contract` errors, but perform a check to see if the contract error was from an "application". If it is not from an "application", I the program will crash as all other contract errors are not enforced. This way, while `(apply 1 '(1 2 3))` would return an error message, `(apply + 5)` would crash.
   * Tests:
     * applyerror - should return error message
     * applyerrorguard - should return valid output
     * workingapply - normal use of apply
-* Non-number value is passed into arithmetic functions
-  * If any arguments for any of the supported arithmetic functions (`+`, `-`, `*`, `/`) are not integers, the program will return the error `"ERROR: [op] received a non-number argument"`. This has been accomplished by desugaring the arguments in a certain way. For example, `(+ '1 '2)` will desugar into `(+ (if (number? '1) '1 (raise "ERROR: + received a non-number argument")) (if (number? '2) '2 (raise "ERROR: + received a non-number argument")))`.
-  * If the `/` function receives both a non-number value and a value that would trigger the division by zero error catching, whichever one that occurred first would be thrown. For example, if we were compiling `(/ 1 0 'a)`, the program would throw a division by zero error. If we were compiling `(/ 1 'a 0)`, the program would throw a non-number argument error.
+* Non-number value is passed into `-`
+  * If any arguments passed into `-` is not an integer, the program will return the error `"ERROR: - received a non-number argument"`. This has been accomplished by desugaring the arguments in a certain way. For example, `(- '1 '2)` will desugar into `(- (let ([tmp '1]) (if (number? tmp) tmp (raise "ERROR: + received a non-number argument"))) (let ([tmp '2]) (if (number? '2) '2 (raise "ERROR: + received a non-number argument"))))`.
+  * This can theoretically be applied to any of the supported arithmetic functions, but it has been only implemented on `-` due to time constraints.
   * Tests:
     * arith - should return error message
     * arithguard - should return valid output
@@ -134,7 +134,37 @@ At this point, I was unable to create a new tagging scheme in `header.cpp`, as I
 
 I have included an image in this repo detailing the issue titled `gcissues.png`. Even with these errors and as far I can tell, the program is successful in implementing the garbage collector. All tests ran via the `tests.rkt` program will implement this garbage collector.
 
+## Boehm GC License Information
 
+Copyright (c) 1988, 1989 Hans-J. Boehm, Alan J. Demers
+Copyright (c) 1991-1996 by Xerox Corporation.  All rights reserved.
+Copyright (c) 1996-1999 by Silicon Graphics.  All rights reserved.
+Copyright (c) 1999-2004 Hewlett-Packard Development Company, L.P.
+
+The file linux_threads.c is also
+Copyright (c) 1998 by Fergus Henderson.  All rights reserved.
+
+The files Makefile.am, and configure.in are
+Copyright (c) 2001 by Red Hat Inc. All rights reserved.
+
+Several files supporting GNU-style builds are copyrighted by the Free
+Software Foundation, and carry a different license from that given
+below.
+
+THIS MATERIAL IS PROVIDED AS IS, WITH ABSOLUTELY NO WARRANTY EXPRESSED
+OR IMPLIED.  ANY USE IS AT YOUR OWN RISK.
+
+Permission is hereby granted to use or copy this program
+for any purpose,  provided the above notices are retained on all copies.
+Permission to modify the code and to distribute modified code is granted,
+provided the above notices are retained, and a notice that the code was
+modified is included with the above copyright notice.
+
+A few of the files needed to use the GNU-style build procedure come with
+slightly different licenses, though they are all similar in spirit.  A few
+are GPL'ed, but with an exception that should cover all uses in the
+collector.  (If you are concerned about such things, I recommend you look
+at the notice in config.guess or ltmain.sh.)
 
 ### Honor Pledge
 

@@ -715,14 +715,8 @@
                                              (match (car split-error)
                                                ["application"
                                                 "ERROR: expected a procedure that can be applied to arguments"]
-                                               ["/"
-                                                "ERROR: / received a non-number argument"]
-                                               ["+"
-                                                "ERROR: + received a non-number argument"]
                                                ["-"
                                                 "ERROR: - received a non-number argument"]
-                                               ["*"
-                                                "ERROR: * received a non-number argument"]
                                                [else
                                                 (pretty-print "Evaluation failed:")
                                                 (pretty-print x) (pretty-print e) (error 'eval-fail)]))]
