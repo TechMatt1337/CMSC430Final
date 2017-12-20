@@ -1,1 +1,1 @@
-(string->list (string #\a #\b (string-ref "abc" 2) (string-ref (string-append "abc" "def") 3) (string-ref (substring "abcdefg" 2) 2) (string-ref (substring "abcdefg" 5 6) 0)))
+(string #\a #\b (string-ref "abc" 2) (string-ref (string-append "abc" "def") 3) (string-ref (substring "abcdefg" 2) 2) (string-ref (substring "abcdefg" 5 6) 0))
